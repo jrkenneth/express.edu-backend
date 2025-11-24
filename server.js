@@ -16,11 +16,11 @@ let db;
 // Connect to MongoDB
 MongoClient.connect(MONGODB_URI, { useUnifiedTopology: true })
     .then(client => {
-        console.log('✅ Connected to MongoDB Atlas');
+        console.log('Connected to MongoDB Atlas');
         db = client.db(DB_NAME);
     })
     .catch(error => {
-        console.error('❌ MongoDB connection error:', error);
+        console.error('MongoDB connection error:', error);
         process.exit(1);
     });
 
@@ -40,6 +40,27 @@ app.use((req, res, next) => {
     }
     console.log('---');
     next();
+});
+
+// Middleware: Static file server for images
+app.use('/images', (req, res, next) => {
+    const imagePath = path.join(__dirname, 'images', req.path);
+    
+    // Check if file exists
+    fs.access(imagePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            console.log(`Image not found: ${imagePath}`);
+            return res.status(404).json({ 
+                error: 'Image not found',
+                message: `The requested image '${req.path}' does not exist`,
+                path: req.path
+            });
+        }
+        
+        // File exists, serve it
+        console.log(`Serving image: ${imagePath}`);
+        res.sendFile(imagePath);
+    });
 });
 
 // Error handler
