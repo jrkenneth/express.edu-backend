@@ -2,7 +2,7 @@ const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const path = require('path');
 const fs = require('fs');
-
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +23,24 @@ MongoClient.connect(MONGODB_URI, { useUnifiedTopology: true })
         console.error('❌ MongoDB connection error:', error);
         process.exit(1);
     });
+
+// Middleware: Enable CORS
+app.use(cors());
+
+// Middleware: Parse JSON bodies
+app.use(express.json());
+
+// Middleware: Logger - logs all requests
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+    }
+    console.log('---');
+    next();
+});
 
 // Error handler
 app.use((err, req, res, next) => {
