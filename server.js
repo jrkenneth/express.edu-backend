@@ -105,6 +105,55 @@ app.get('/search', async (req, res) => {
     }
 });
 
+// Route: POST /orders - Create a new order
+app.post('/orders', async (req, res) => {
+    try {
+        const { name, phone, items, total } = req.body;
+
+        // Validation
+        if (!name || !phone || !items || !total) {
+            return res.status(400).json({ 
+                error: 'Missing required fields',
+                required: ['name', 'phone', 'items', 'total']
+            });
+        }
+
+        // Validate name (letters only)
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        if (!nameRegex.test(name)) {
+            return res.status(400).json({ error: 'Name must contain letters only' });
+        }
+
+        // Validate phone (numbers only)
+        const phoneRegex = /^[0-9]+$/;
+        if (!phoneRegex.test(phone)) {
+            return res.status(400).json({ error: 'Phone must contain numbers only' });
+        }
+
+        // Create order document
+        const order = {
+            name,
+            phone,
+            items, // Array of { lessonId, subject, quantity, price }
+            total,
+            timestamp: new Date(),
+            status: 'confirmed'
+        };
+
+        // Insert into database
+        const result = await db.collection('orders').insertOne(order);
+
+        res.status(201).json({
+            message: 'Order created successfully',
+            orderId: result.insertedId,
+            order: { ...order, _id: result.insertedId }
+        });
+    } catch (error) {
+        console.error('Error creating order:', error);
+        res.status(500).json({ error: 'Failed to create order' });
+    }
+});
+
 // Error handler
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
