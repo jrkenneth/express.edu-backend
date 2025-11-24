@@ -63,6 +63,17 @@ app.use('/images', (req, res, next) => {
     });
 });
 
+// Route: GET /lessons - Return all lessons
+app.get('/lessons', async (req, res) => {
+    try {
+        const lessons = await db.collection('lessons').find({}).toArray();
+        res.json(lessons);
+    } catch (error) {
+        console.error('Error fetching lessons:', error);
+        res.status(500).json({ error: 'Failed to fetch lessons' });
+    }
+});
+
 // Error handler
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
